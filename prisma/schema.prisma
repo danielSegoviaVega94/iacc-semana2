@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Carrera {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique
+  estudiantes Estudiante[]
+}
+
+model Estudiante {
+  id                Int      @id @default(autoincrement())
+  nombre            String
+  apellido          String
+  rut               String   @unique
+  direccion         String
+  fechaPeriodo      DateTime
+  
+  carreraId         Int
+  carrera           Carrera  @relation(fields: [carreraId], references: [id])
+  
+  createdAt         DateTime @default(now())
+}
