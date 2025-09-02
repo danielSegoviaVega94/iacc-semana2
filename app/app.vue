@@ -1,81 +1,102 @@
 <template>
   <div class="container">
-    <div class="career-manager-container">
-      <h1>🛠️ Administrar Carreras</h1>
-      <form @submit.prevent="agregarCarrera" class="career-form">
-        <div class="form-group">
-          <label for="new-career">Nombre de la Carrera:</label>
-          <input id="new-career" type="text" v-model="nuevaCarreraNombre" placeholder="Ej: Ingeniería Civil" required>
-        </div>
-        <button type="submit" class="submit-btn-small">Agregar Carrera</button>
-      </form>
-      <div class="career-list">
-        <h3>Carreras Actuales</h3>
-        <p v-if="!carreras || carreras.length === 0">No hay carreras registradas.</p>
-        <ul v-else>
-          <li v-for="carrera in carreras" :key="carrera.id">
-            <span>{{ carrera.nombre }}</span>
-            <button @click="eliminarCarrera(carrera.id)" class="delete-btn-small" title="Eliminar carrera">×</button>
-          </li>
-        </ul>
-      </div>
-    </div>
-
     <div class="form-container">
-      <h1>📝 Registro Estudiantil</h1>
-      <form @submit.prevent="registrarEstudiante">
+      <h1>Gestión de Clientes - Justicia para Todos</h1>
+      <form @submit.prevent="guardarCliente">
 
-        <div class="form-group">
-          <label for="nombre">Nombre:</label>
-          <input type="text" v-model="form.nombre" required>
+        <div class="grid-2-cols">
+          <div class="form-group">
+            <label for="nombre">Nombre:</label>
+            <input type="text" v-model="form.nombre" required>
+          </div>
+          <div class="form-group">
+            <label for="apellido">Apellido:</label>
+            <input type="text" v-model="form.apellido" required>
+          </div>
+        </div>
+
+        <div class="grid-2-cols">
+          <div class="form-group">
+            <label for="rut">RUT:</label>
+            <input type="text" v-model="form.rut" placeholder="12345678-9" required>
+          </div>
+          <div class="form-group">
+            <label for="telefono">Teléfono:</label>
+            <input type="text" v-model="form.telefono" placeholder="+56912345678" required>
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="apellido">Apellido:</label>
-          <input type="text" v-model="form.apellido" required>
-        </div>
-
-        <div class="form-group">
-          <label for="rut">RUT:</label>
-          <input type="text" v-model="form.rut" placeholder="Ej: 12.345.678-9" required>
+          <label for="correo">Correo Electrónico:</label>
+          <input type="email" v-model="form.correoElectronico" placeholder="usuario@dominio.com" required>
         </div>
 
         <div class="form-group">
           <label for="direccion">Dirección:</label>
-          <input type="text" v-model="form.direccion" required>
+          <input type="text" v-model="form.direccion" placeholder="País, N°, Calle, Depto, C.P." required>
+        </div>
+
+        <hr>
+
+        <div class="grid-2-cols">
+          <div class="form-group">
+            <label for="numeroCaso">Número de Caso:</label>
+            <input type="number" v-model="form.numeroCaso" required>
+          </div>
+          <div class="form-group">
+            <label for="fechaInicioCaso">Fecha Inicio del Caso:</label>
+            <input type="date" v-model="form.fechaInicioCaso" required>
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="carrera">Carrera a Cursar:</label>
-          <select v-model="form.carreraId" required>
-            <option disabled value="">-- Seleccione una carrera --</option>
-            <option v-for="carrera in carreras" :key="carrera.id" :value="carrera.id">
-              {{ carrera.nombre }}
-            </option>
+          <label for="descripcionCaso">Descripción del Caso:</label>
+          <textarea v-model="form.descripcionCaso" rows="3" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="estadoCaso">Estado del Caso:</label>
+          <select v-model="form.estadoCaso" required>
+            <option value="ACTIVO">Activo</option>
+            <option value="EN_PROCESO">En Proceso</option>
+            <option value="CERRADO">Cerrado</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label for="periodo">Fecha de Período Académico:</label>
-          <input type="date" v-model="form.fechaPeriodo" required>
-        </div>
+        <template v-if="form.estadoCaso === 'CERRADO'">
+          <div class="form-group">
+            <label for="descripcionSentencia">Descripción de Sentencia:</label>
+            <textarea v-model="form.descripcionSentencia" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="fechaCierreCaso">Fecha Cierre del Caso:</label>
+            <input type="date" v-model="form.fechaCierreCaso">
+          </div>
+        </template>
 
-        <button type="submit" class="submit-btn">Registrar Estudiante</button>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn">{{ modoEdicion ? 'Actualizar Cliente' : 'Registrar Cliente' }}</button>
+          <button v-if="modoEdicion" @click="cancelarEdicion" type="button" class="cancel-btn">Cancelar</button>
+        </div>
 
         <p v-if="mensaje" :class="esError ? 'mensaje-error' : 'mensaje-exito'">{{ mensaje }}</p>
       </form>
     </div>
 
     <div class="list-container">
-      <h1>🎓 Estudiantes Registrados</h1>
-      <p v-if="!estudiantes || estudiantes.length === 0">No hay estudiantes registrados aún.</p>
+      <h1>Clientes Registrados</h1>
+      <p v-if="!clientes || clientes.length === 0">No hay clientes registrados.</p>
       <ul v-else>
-        <li v-for="estudiante in estudiantes" :key="estudiante.id">
-          <div class="student-info">
-            <strong>{{ estudiante.nombre }} {{ estudiante.apellido }}</strong> ({{ estudiante.rut }})
-            <span>Carrera: {{ estudiante.carrera.nombre }}</span>
+        <li v-for="cliente in clientes" :key="cliente.id">
+          <div class="client-info">
+            <strong>{{ cliente.nombre }} {{ cliente.apellido }} (RUT: {{ cliente.rut }})</strong>
+            <span>Caso #{{ cliente.numeroCaso }} - <span :class="`status-${cliente.estadoCaso}`">{{ cliente.estadoCaso }}</span></span>
+            <span>📧 {{ cliente.correoElectronico }} | 📞 {{ cliente.telefono }}</span>
           </div>
-          <button @click="eliminarEstudiante(estudiante.id)" class="delete-btn" title="Eliminar estudiante">×</button>
+          <div class="client-actions">
+            <button @click="editarCliente(cliente)" class="edit-btn" title="Editar cliente">✏️</button>
+            <button @click="eliminarCliente(cliente.id)" class="delete-btn" title="Eliminar cliente">×</button>
+          </div>
         </li>
       </ul>
     </div>
@@ -85,137 +106,120 @@
 <script setup>
 import { ref } from 'vue';
 
-const nuevaCarreraNombre = ref('');
+const modoEdicion = ref(false);
+const clienteEditId = ref(null);
 
 const form = ref({
+  rut: '',
   nombre: '',
   apellido: '',
-  rut: '',
   direccion: '',
-  carreraId: '',
-  fechaPeriodo: '',
+  correoElectronico: '',
+  telefono: '',
+  numeroCaso: '',
+  descripcionCaso: '',
+  fechaInicioCaso: '',
+  estadoCaso: 'ACTIVO',
+  descripcionSentencia: '',
+  fechaCierreCaso: '',
 });
+
 const mensaje = ref('');
 const esError = ref(false);
 
-// --- Carga de Datos desde la API ---
-const { data: carreras, refresh: refrescarCarreras } = await useFetch('/api/carreras');
-const { data: estudiantes, refresh: refrescarEstudiantes } = await useFetch('/api/estudiantes');
+const { data: clientes, refresh: refrescarClientes } = await useFetch('/api/clientes');
 
-// --- Lógica para Administrar Carreras ---
-const agregarCarrera = async () => {
-  if (!nuevaCarreraNombre.value.trim()) return;
-  try {
-    await $fetch('/api/carreras', {
-      method: 'POST',
-      body: { nombre: nuevaCarreraNombre.value },
-    });
-    nuevaCarreraNombre.value = '';
-    await refrescarCarreras();
-  } catch (error) {
-    alert(error.data?.statusMessage || 'Error al agregar carrera.');
-  }
+const formatDateForInput = (date) => {
+  if (!date) return '';
+  return new Date(date).toISOString().split('T')[0];
 };
 
-const eliminarCarrera = async (id) => {
-  if (confirm('¿Seguro que quieres eliminar esta carrera?')) {
-    try {
-      await $fetch(`/api/carreras/${id}`, { method: 'DELETE' });
-      await refrescarCarreras();
-      await refrescarEstudiantes(); // Refrescar por si se eliminó un estudiante indirectamente
-    } catch (error) {
-      alert(error.data?.statusMessage || 'Error al eliminar carrera.');
-    }
-  }
+const resetForm = () => {
+  Object.keys(form.value).forEach(key => form.value[key] = '');
+  form.value.estadoCaso = 'ACTIVO';
+  modoEdicion.value = false;
+  clienteEditId.value = null;
 };
 
-const registrarEstudiante = async () => {
+const guardarCliente = async () => {
   mensaje.value = '';
   esError.value = false;
+  const url = modoEdicion.value ? `/api/clientes/${clienteEditId.value}` : '/api/clientes';
+  const method = modoEdicion.value ? 'PUT' : 'POST';
+
   try {
-    const response = await $fetch('/api/registro', {
-      method: 'POST',
+    const response = await $fetch(url, {
+      method: method,
       body: form.value,
     });
     mensaje.value = response.message;
-    Object.keys(form.value).forEach(key => form.value[key] = '');
-    await refrescarEstudiantes();
+    resetForm();
+    await refrescarClientes();
   } catch (error) {
     esError.value = true;
-    mensaje.value = error.data?.statusMessage || 'Ocurrió un error inesperado al registrar.';
+    mensaje.value = error.data?.statusMessage || 'Ocurrió un error inesperado.';
   }
 };
 
-const eliminarEstudiante = async (id) => {
-  if (confirm('¿Estás seguro de que quieres eliminar a este estudiante?')) {
+const editarCliente = (cliente) => {
+  modoEdicion.value = true;
+  clienteEditId.value = cliente.id;
+  form.value = {
+    ...cliente,
+    fechaInicioCaso: formatDateForInput(cliente.fechaInicioCaso),
+    fechaCierreCaso: formatDateForInput(cliente.fechaCierreCaso),
+  };
+  window.scrollTo(0, 0);
+};
+
+const cancelarEdicion = () => {
+  resetForm();
+};
+
+const eliminarCliente = async (id) => {
+  if (confirm('¿Estás seguro de que quieres eliminar a este cliente?')) {
     try {
-      await $fetch(`/api/estudiantes/${id}`, { method: 'DELETE' });
-      await refrescarEstudiantes();
+      await $fetch(`/api/clientes/${id}`, { method: 'DELETE' });
+      await refrescarClientes();
+      if(id === clienteEditId.value) {
+        resetForm();
+      }
     } catch (error) {
-      alert('Error al eliminar el estudiante.');
+      alert('Error al eliminar el cliente.');
     }
   }
 };
 </script>
 
 <style>
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f4f7f6;
-  margin: 0;
-  padding: 20px;
-}
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 40px;
-}
-
-.form-container, .list-container, .career-manager-container {
-  background-color: #ffffff;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
-  box-sizing: border-box;
-}
-
-h1 {
-  text-align: center;
-  color: #0056b3;
-  margin-top: 0;
-  margin-bottom: 25px;
-}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+.container { display: flex; flex-direction: column; align-items: center; gap: 40px; }
+.form-container, .list-container { background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); width: 100%; max-width: 700px; box-sizing: border-box; }
+h1 { text-align: center; color: #333; margin-top: 0; margin-bottom: 25px; }
 .form-group { margin-bottom: 20px; }
-label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
-input[type="text"], input[type="date"], select {
-  width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px;
-}
-.submit-btn {
-  width: 100%; background-color: #0056b3; color: white; padding: 15px; border: none; border-radius: 5px; font-size: 18px; cursor: pointer; transition: background-color 0.3s ease;
-}
+label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+input[type="text"], input[type="date"], input[type="email"], input[type="number"], select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+hr { border: 0; height: 1px; background: #ddd; margin: 30px 0; }
+.grid-2-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-actions { display: flex; gap: 10px; }
+.submit-btn, .cancel-btn { flex-grow: 1; color: white; padding: 15px; border: none; border-radius: 5px; font-size: 18px; cursor: pointer; transition: background-color 0.3s ease; }
+.submit-btn { background-color: #0056b3; }
 .submit-btn:hover { background-color: #004494; }
-
+.cancel-btn { background-color: #6c757d; }
+.cancel-btn:hover { background-color: #5a6268; }
 .list-container ul { list-style: none; padding: 0; }
-.list-container li { display: flex; justify-content: space-between; align-items: center; background-color: #e9f5ff; padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #0056b3; }
-.student-info strong { display: block; font-size: 1.1em; color: #004494; }
-.student-info span { color: #555; font-size: 0.9em; }
-
+.list-container li { display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #0056b3; }
+.client-info strong { display: block; font-size: 1.1em; color: #004494; }
+.client-info span { color: #555; font-size: 0.9em; display: block; }
+.client-actions { display: flex; gap: 8px; }
+.edit-btn, .delete-btn { color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 18px; line-height: 35px; text-align: center; transition: background-color 0.3s ease; }
+.edit-btn { background-color: #ffc107; }
+.edit-btn:hover { background-color: #e0a800; }
+.delete-btn { background-color: #dc3545; }
+.delete-btn:hover { background-color: #c82333; }
 .mensaje-exito { color: #28a745; text-align: center; margin-top: 15px; font-weight: bold; }
 .mensaje-error { color: #dc3545; text-align: center; margin-top: 15px; font-weight: bold; }
-
-.delete-btn { background-color: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 20px; line-height: 30px; text-align: center; transition: background-color 0.3s ease; }
-.delete-btn:hover { background-color: #c82333; }
-
-.career-manager-container h3 { color: #0056b3; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-.career-form { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 20px; }
-.career-form .form-group { flex-grow: 1; margin-bottom: 0; }
-.submit-btn-small { background-color: #28a745; color: white; padding: 12px 20px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: background-color 0.3s ease; }
-.submit-btn-small:hover { background-color: #218838; }
-.career-list ul { list-style: none; padding: 0; }
-.career-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 5px; margin-bottom: 8px; background-color: #f8f9fa; }
-.delete-btn-small { background-color: #e74c3c; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 16px; line-height: 24px; text-align: center; transition: background-color 0.3s ease; }
-.delete-btn-small:hover { background-color: #c0392b; }
+.status-ACTIVO { color: #28a745; font-weight: bold; }
+.status-EN_PROCESO { color: #ffc107; font-weight: bold; }
+.status-CERRADO { color: #6c757d; font-weight: bold; }
 </style>

@@ -2,31 +2,31 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export default defineEventHandler(async (event) => {
-    const studentId = event.context.params?.id;
+    const clienteId = event.context.params?.id;
 
-    if (!studentId) {
+    if (!clienteId) {
         throw createError({
             statusCode: 400,
-            statusMessage: 'ID del estudiante no proporcionado',
+            statusMessage: 'ID del cliente no proporcionado',
         });
     }
 
     try {
-        await prisma.estudiante.delete({
+        await prisma.cliente.delete({
             where: {
-                id: Number(studentId),
+                id: Number(clienteId),
             },
         });
 
         return {
             statusCode: 200,
-            message: 'Estudiante eliminado correctamente',
+            message: 'Cliente eliminado correctamente',
         };
 
     } catch (error) {
         throw createError({
             statusCode: 500,
-            statusMessage: 'No se pudo eliminar al estudiante',
+            statusMessage: 'No se pudo eliminar al cliente',
         });
     }
 });
